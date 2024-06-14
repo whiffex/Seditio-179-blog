@@ -7,7 +7,7 @@ https://seditio.org
 [BEGIN_SED]
 File=index.php
 Version=179
-Updated=2021-jun-15
+Updated=2024-jun-15
 Type=Core
 Author=Seditio Team
 Description=SEF Url's loader
