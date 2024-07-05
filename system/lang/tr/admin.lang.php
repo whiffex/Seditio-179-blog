@@ -24,7 +24,6 @@ Description=Admin panel
 $L['core_main'] = "Ana kurulum";
 $L['core_parser'] = "Ayrıştırıcı"; 			// New in v120
 $L['core_rss'] = "RSS beslemeleri"; 			// New in v173
-$L['core_dic'] = "Dizinler ve Ekstra alanlar"; 			// New in v173
 $L['core_time'] = "Saat ve tarih";
 $L['core_skin'] = "Temalar";
 $L['core_lang'] = "Diller";
@@ -301,44 +300,6 @@ $L['adm_dnsrecord'] = "Bu adres için DNS kaydı";
 /* ====== Smilies ====== */
 
 $L['adm_help_smilies'] = "Müsait değil";
-
-/* ====== Dictionary ====== */
-
-$L['adm_dic_list'] = "Dizin listesi";
-$L['adm_dictionary'] = "Dizin";
-$L['adm_dic_title'] = "Dizinin başlığı";
-$L['adm_dic_code'] = "Extra alan adı";
-$L['adm_dic_list'] = "Dizinlerin listesi";
-$L['adm_dic_term_list'] = "Terimler listesi";
-$L['adm_dic_add'] = "Yeni dizin ekle";
-$L['adm_dic_edit'] = "Dizini düzenle";
-$L['adm_dic_add_term'] = "Yeni bir terim ekle";
-$L['adm_dic_term_title'] = "Terimin başlığı";
-$L['adm_dic_term_value'] = "Terimin değeri";
-$L['adm_dic_term_defval'] = "Terimi varsayılan yap?";
-$L['adm_dic_term_edit'] = "Dizinden terimi düzenle";
-$L['adm_dic_children'] = "Alt dizini";
-
-$L['adm_dic_mera'] = "Birim";
-$L['adm_dic_values'] = "Dizin için değer listesi";
-
-$L['adm_dic_form_title'] = "Form öğesi için başlık";
-$L['adm_dic_form_desc'] = "Form öğesi için metin";
-$L['adm_dic_form_size'] = "Input uzunluğu (size = 56)";
-$L['adm_dic_form_maxsize'] = "Input maxlength (max = 255)";
-$L['adm_dic_form_cols'] = "Textarea uzunluk (örnek = 60)";
-$L['adm_dic_form_rows'] = "Textarea genişlik (örnek = 3)";
-
-$L['adm_dic_extra'] = "Ekstra alan";
-$L['adm_dic_addextra'] = "Fazladan alan ekle";
-$L['adm_dic_editextra'] = "Fazladan alanı düzenle";
-$L['adm_dic_extra_location'] = "Tablonun adı";
-$L['adm_dic_extra_type'] = "Alanın veri türü";
-$L['adm_dic_extra_size'] = "Alan uzunluğu";
-
-$L['adm_dic_comma_separat'] = "(virgülle ayrılmış değerler)";
-
-$L['adm_help_dic'] = ""; //Need add
 
 /* ====== Menu manager ====== */
 

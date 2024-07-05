@@ -25,7 +25,7 @@ error_reporting(E_ALL ^ E_NOTICE);
 require(SED_ROOT . '/system/database.' . $cfg['sqldb'] . '.php');
 $connection_id = sed_sql_connect($cfg['mysqlhost'], $cfg['mysqluser'], $cfg['mysqlpassword'], $cfg['mysqldb']);
 unset($cfg['mysqlhost'], $cfg['mysqluser'], $cfg['mysqlpassword']);
-sed_sql_set_charset($connection_id, 'utf8');
+sed_sql_set_charset($connection_id, 'utf8mb4');
 
 mb_internal_encoding('UTF-8'); // New v171
 
@@ -577,58 +577,6 @@ if (!$cfg['disablehitstats']) {
 if (!isset($sed_cat) && !$cfg['disable_page']) {
 	$sed_cat = sed_load_structure();
 	sed_cache_store('sed_cat', $sed_cat, 3600);
-}
-
-/* ======== Directories ======== */
-
-$dic_type = array(1 => 'select', 2 => 'radio', 3 => 'checkbox',  4 => 'textinput', 5 => 'textarea');
-$dic_var_type = array('varchar' => 'TXT', 'text' => 'HTM', 'int' => 'INT', 'tinyint' => 'INT', 'boolean' => 'BOL');
-
-if (!isset($sed_dic) && (sed_stat_get("version") >= 177)) {
-	// Load directories
-	$sql = sed_sql_query("SELECT * FROM $db_dic");
-	if (sed_sql_numrows($sql) > 0) {
-		while ($row = sed_sql_fetchassoc($sql)) {
-			if ($row['dic_type'] == 3 && $row['dic_extra_type'] != 'boolean') {
-				$vartype = 'ARR';
-			} else {
-				$vartype = (!empty($row['dic_extra_type'])) ? $dic_var_type[$row['dic_extra_type']] : 'TXT';
-			}
-			$dictype = !empty($row['dic_type']) ? $dic_type[$row['dic_type']] : $dic_type[4];
-			$sed_dic[$row['dic_code']] = array(
-				'id' => $row['dic_id'],
-				'title' => $row['dic_title'],
-				'code' => $row['dic_code'],
-				'type' => $dictype,
-				'vartype' => $vartype,
-				'values' => $row['dic_values'],
-				'parent' => $row['dic_parent'],
-				'mera' => $row['dic_mera'],
-				'form_title' => $row['dic_form_title'],
-				'form_desc' => $row['dic_form_desc'],
-				'form_size' => $row['dic_form_size'],
-				'form_maxsize' => $row['dic_form_maxsize'],
-				'form_cols' => $row['dic_form_cols'],
-				'form_rows' => $row['dic_form_rows'],
-				'extra_location' => $row['dic_extra_location'],
-				'extra_type' => $row['dic_extra_type'],
-				'extra_size' => $row['dic_extra_size'],
-				'terms' => array(),
-				'term_default' => ''
-			);
-			$sed_dicid_arr[$row['dic_id']] = $row['dic_code'];
-		}
-		// Load terms
-		$sql2 = sed_sql_query("SELECT * FROM $db_dic_items");
-		if (sed_sql_numrows($sql2) > 0) {
-			while ($row2 = sed_sql_fetchassoc($sql2)) {
-				$term_code = ($row2['ditem_code'] != "") ? $row2['ditem_code'] : $row2['ditem_id'];
-				$sed_dic[$sed_dicid_arr[$row2['ditem_dicid']]]['terms'][$term_code] = $row2['ditem_title'];
-				if (!empty($row2['ditem_defval'])) $sed_dic[$sed_dicid_arr[$row2['ditem_dicid']]]['term_default'] = $term_code;
-			}
-		}
-	}
-	sed_cache_store('sed_dic', $sed_dic, 3600);
 }
 
 /* ======== Menus ======== */

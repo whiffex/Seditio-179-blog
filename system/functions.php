@@ -103,7 +103,7 @@ $shield_hammer = 0;
 
 /* ======== Names of the SQL tables ========= */
 
-$sed_dbnames = array('auth', 'banlist', 'cache', 'com', 'core', 'config', 'dic', 'dic_items', 'extra_fields', 'groups', 'groups_users', 'logger', 'menu', 'online', 'pages', 'parser', 'pfs', 'pfs_folders', 'plugins', 'pm', 'polls_options', 'polls', 'polls_voters', 'rated', 'ratings', 'referers', 'smilies', 'stats', 'structure', 'trash', 'users');
+$sed_dbnames = array('auth', 'banlist', 'cache', 'com', 'core', 'config', 'groups', 'groups_users', 'logger', 'menu', 'online', 'pages', 'parser', 'pfs', 'pfs_folders', 'plugins', 'pm', 'polls_options', 'polls', 'polls_voters', 'rated', 'ratings', 'referers', 'smilies', 'stats', 'structure', 'trash', 'users');
 
 foreach ($sed_dbnames as $k => $i) {
 	$j = 'db_' . $i;
@@ -543,22 +543,11 @@ function sed_build_comments($code, $url, $display, $allow = TRUE)
 		return (array('', '', ''));
 	}
 
-	// ---------- Extra fields - getting
-	$extrafields = array();
-	$extrafields = sed_extrafield_get('com');
-	$number_of_extrafields = count($extrafields);
-
-	// ----------------------
-
 	if ($display) {
 		if ($n == 'send' && $usr['auth_write_com'] && $allow) {
 			sed_shield_protect();
 
 			$rtext = sed_import('rtext', 'P', 'HTM');
-
-			// --------- Extra fields     
-			if ($number_of_extrafields > 0) $newcommentextrafields = sed_extrafield_buildvar($extrafields, 'r', 'com');
-			// ----------------------			
 
 			/* == Hook for the plugins == */
 			$extp = sed_getextplugins('comments.send.first');
@@ -574,29 +563,20 @@ function sed_build_comments($code, $url, $display, $allow = TRUE)
 
 			if (empty($error_string)) {
 
-				// ------ Extra fields 
-				if (count($extrafields) > 0) {
-					foreach ($extrafields as $i => $row) {
-						$ssql_extra_columns .= ', com_' . $row['code'];
-						$ssql_extra_values .= ", '" . sed_sql_prep($newcommentextrafields['com_' . $row['code']]) . "'";
-					}
-				}
-				// ----------------------
-
 				$sql = sed_sql_query("INSERT INTO $db_com 
 						(com_code, 
 						com_author, 
 						com_authorid, 
 						com_authorip, 
 						com_text, 
-						com_date" . $ssql_extra_columns . ") 
+						com_date) 
 					VALUES 
 						('" . sed_sql_prep($code) . "', 
 						'" . sed_sql_prep($usr['name']) . "', 
 						" . (int)$usr['id'] . ", 
 						'" . $usr['ip'] . "', 
 						'" . sed_sql_prep($rtext) . "', 
-						" . (int)$sys['now_offset'] . $ssql_extra_values . ")");
+						" . (int)$sys['now_offset']. ")");
 
 				if (mb_substr($code, 0, 1) == 'p') {
 					$page_id = mb_substr($code, 1, 10);
@@ -673,10 +653,6 @@ function sed_build_comments($code, $url, $display, $allow = TRUE)
 
 				$rtext = sed_import('rtext', 'P', 'HTM');
 
-				// --------- Extra fields     
-				if ($number_of_extrafields > 0) $rcommentextrafields = sed_extrafield_buildvar($extrafields, 'r', 'com');
-				// ----------------------	
-
 				/* == Hook for the plugins == */
 				$extp = sed_getextplugins('comments.edit.update.first');
 				if (is_array($extp)) {
@@ -692,15 +668,7 @@ function sed_build_comments($code, $url, $display, $allow = TRUE)
 				if (empty($error_string)) {
 					sed_block($usr['allow_edit_com']);
 
-					// ------ Extra fields 
-					if (count($extrafields) > 0) {
-						foreach ($extrafields as $i => $row) {
-							$ssql_extra .= ", com_" . $row['code'] . " = " . "'" . sed_sql_prep($rcommentextrafields['com_' . $row['code']]) . "'";
-						}
-					}
-					// ----------------------	
-
-					$sql3 = sed_sql_query("UPDATE $db_com SET com_text = '" . sed_sql_prep($rtext) . "'" . $ssql_extra . " WHERE com_id='$b'");
+					$sql3 = sed_sql_query("UPDATE $db_com SET com_text = '" . sed_sql_prep($rtext) . "' WHERE com_id='$b'");
 
 					/* == Hook for the plugins == */
 					$extp = sed_getextplugins('comments.edit.update.done');
@@ -753,13 +721,7 @@ function sed_build_comments($code, $url, $display, $allow = TRUE)
 					"COMMENTS_EDIT_FORM_TEXT" => $post_main,
 					"COMMENTS_EDIT_FORM_MYPFS" => $pfs
 				));
-
-				// Extra fields 
-				if (count($extrafields) > 0) {
-					$extra_array = sed_build_extrafields('com', 'COMMENTS_EDIT_FORM', $extrafields, $row, 'r');
-					$t->assign($extra_array);
-				}
-				// -----------				
+		
 
 				if ($usr['auth_write_com']) {
 
@@ -819,13 +781,7 @@ function sed_build_comments($code, $url, $display, $allow = TRUE)
 				"COMMENTS_FORM_MYPFS" => $pfs
 			));
 
-			// Extra fields 
-			if (count($extrafields) > 0) {
-				$extra_array = sed_build_extrafields('com', 'COMMENTS_FORM', $extrafields, $newcommentextrafields, 'r');
-				$t->assign($extra_array);
-			}
-			// -----------
-
+		
 			if ($usr['auth_write_com'] && $allow) {
 
 				/* == Hook for the plugins == */
@@ -902,13 +858,6 @@ function sed_build_comments($code, $url, $display, $allow = TRUE)
 						"COMMENTS_ROW_ODDEVEN" => sed_build_oddeven($i),
 						"COMMENTS_ROW_ADMIN" => $com_quote . $com_admin
 					));
-
-					// ---------- Extra fields - getting
-					if (count($extrafields) > 0) {
-						$extra_array = sed_build_extrafields_data('com', 'COMMENTS_ROW', $extrafields, $row);
-						$t->assign($extra_array);
-					}
-					// ----------------------						
 
 					/* === Hook - Part2 : Include === */
 					if (is_array($extp)) {
@@ -4701,311 +4650,6 @@ function sed_xp()
 {
 	return ("<div><input type=\"hidden\" id=\"x\" name=\"x\" value=\"" . sed_sourcekey() . "\" /></div>");
 }
-
-/* ============== EXTRA FIELD FUNCTION =============== */
-
-/** 
- * Get extra field for table 
- * 
- * @param string $sql_table SQL Table name
- * @return array 
- */
-function sed_extrafield_get($sql_table)
-{
-	global $sed_dic, $cfg;
-	$res = array();
-	if (!empty($sed_dic)) {
-		foreach ($sed_dic as $key => $row) {
-			if ($row['extra_location'] == $sql_table) {
-				$res[$key] = $row;
-			}
-		}
-	}
-	return $res;
-}
-
-/** 
- * Build vars if data is ARRAY? convert to type TXT 
- * 
- * @param array $data Array 
- * @return array 
- */
-function sed_array_buildvars($data)
-{
-	$res = array();
-	foreach ($data as $k => $v) {
-		$res[] = sed_import($v, 'D', 'TXT');
-	}
-	return $res;
-}
-
-
-/** 
- * Build extra field variable 
- */
-function sed_extrafield_buildvar($extrafields, $var_prefix, $table_prefix)
-{
-	if (count($extrafields) > 0) {
-		foreach ($extrafields as $row) {
-			$import = sed_import($var_prefix . $row['code'], 'P', $row['vartype']);
-			$import = (is_array($import)) ? implode(',', sed_array_buildvars($import)) : $import;
-			$res[$table_prefix . '_' . $row['code']] = $import;
-		}
-	}
-	return $res;
-}
-
-/**
- * Add extra field for pages
- *
- * @param string $sql_table Table for adding extrafield (without sed_)
- * @param string $name Field name (unique)
- * @param string $type Field type (input, textarea etc)
- * @param string $size Field size
- * @return bool
- */
-function sed_extrafield_add($sql_table, $name, $type, $size)
-{
-	global $db_dic, $cfg;
-
-	$table_prefix = $cfg['sqldbprefix'];
-
-	$fieldsres = sed_sql_query("SELECT dic_code FROM $db_dic WHERE dic_extra_location = '$sql_table'");
-
-	$extrafieldsnames = array();
-	while ($row = sed_sql_fetchassoc($fieldsres)) {
-		$extrafieldsnames[] = $row['dic_code'];
-	}
-
-	if (count($extrafieldsnames) > 0) if (in_array($name, $extrafieldsnames)) return 0; // No adding - fields already exist 
-
-	// Check table sed_$sql_table - if field with same name exists - exit. 
-	if (sed_sql_numrows(sed_sql_query("SHOW COLUMNS FROM " . $table_prefix . $sql_table . " LIKE '%\_$name'")) > 0) {
-		return FALSE;
-	}
-
-	$fieldsres = sed_sql_query("SELECT * FROM " . $table_prefix . $sql_table . " LIMIT 1");
-	$i = 0;
-	while ($i < sed_sql_numfields($fieldsres)) {
-		$column = sed_sql_fetchfield($fieldsres, $i);
-
-		// get column prefix in this table 
-		$column_prefix = substr($column->name, 0, strpos($column->name, "_"));
-		preg_match("#.*?_$name$#", $column->name, $match);
-		if (isset($match[1]) && $match[1] != "") return false; // No adding - fields already exist 
-		$i++;
-	}
-
-	$step1 = sed_sql_query("UPDATE $db_dic SET 
-		dic_extra_location = '" . sed_sql_prep($sql_table) . "', 
-		dic_extra_type = '" . sed_sql_prep($type) . "', 
-		dic_extra_size = '" . $size . "' 
-		WHERE dic_code = '" . $name . "'");
-
-	switch ($type) {
-		case "varchar":
-			$sqltype = "VARCHAR(" . $size . ")";
-			break;
-		case "text":
-			$sqltype = "TEXT";
-			break;
-		case "int":
-			$sqltype = "VARCHAR(" . $size . ")";
-			break;
-		case "tinyint":
-			$sqltype = "TINYINT(" . $size . ")";
-			break;
-		case "boolean":
-			$sqltype = "TINYINT(1)";
-			break;
-	}
-
-	$step2 = sed_sql_query("ALTER TABLE " . $table_prefix . $sql_table . " ADD " . $column_prefix . "_$name $sqltype ");
-	return TRUE;
-}
-
-/**
- * Update extra field
- *
- * @param string $sql_table Table contains extrafield (without sed_)
- * @param string $name Field name (unique)
- * @param string $type Field type (input, textarea etc)
- * @param string $size Field size
- * @return bool
- */
-function sed_extrafield_update($sql_table, $name, $type, $size)
-{
-	global $db_dic, $cfg;
-
-	$table_prefix = $cfg['sqldbprefix'];
-
-	$fieldsres = sed_sql_query("SELECT COUNT(*) FROM $db_dic WHERE dic_code = '$name' AND dic_extra_location='$sql_table'");
-
-	if (sed_sql_numrows($fieldsres) <= 0 || sed_sql_numrows(sed_sql_query("SHOW COLUMNS FROM " . $table_prefix . $sql_table . " LIKE '%\_$name'")) <= 0) {
-		return FALSE;
-	}
-
-	$fieldsres = sed_sql_query("SELECT * FROM " . $table_prefix . $sql_table . " LIMIT 1");
-	$column = sed_sql_fetchfield($fieldsres, 0);
-	$column_prefix = substr($column->name, 0, strpos($column->name, "_"));
-
-	$step1 = sed_sql_query("UPDATE $db_dic SET 
-		dic_extra_location = '" . sed_sql_prep($sql_table) . "', 
-		dic_extra_type = '" . sed_sql_prep($type) . "', 
-		dic_extra_size = '" . $size . "' 
-		WHERE dic_code = '" . $name . "'");
-
-	if (empty($size)) $size = 11;
-
-	switch ($type) {
-		case "varchar":
-			$sqltype = "VARCHAR(" . $size . ")";
-			break;
-		case "text":
-			$sqltype = "TEXT";
-			break;
-		case "int":
-			$sqltype = "INT(" . $size . ")";
-			break;
-		case "tinyint":
-			$sqltype = "TINYINT(" . $size . ")";
-			break;
-		case "boolean":
-			$sqltype = "TINYINT(1)";
-			break;
-	}
-
-	$step2 = sed_sql_query("ALTER TABLE " . $table_prefix . $sql_table . " CHANGE " . $column_prefix . "_$name " . $column_prefix . "_$name $sqltype ");
-	return TRUE;
-}
-
-/**
- * Delete extra field
- *
- * @param string $sql_table Table contains extrafield (without sed_)
- * @param string $name Name of extra field
- * @return bool
- */
-function sed_extrafield_remove($sql_table, $name)
-{
-	global $db_dic, $cfg;
-
-	$table_prefix = $cfg['sqldbprefix'];
-
-	if ((int) sed_sql_result(sed_sql_query("SELECT COUNT(*) FROM $db_dic 
-        WHERE dic_code = '$name' AND dic_extra_location='$sql_table'"), 0, 0) <= 0) {
-		return FALSE; // Attempt to remove non-extra field 
-	}
-
-	$fieldsres = sed_sql_query("SELECT * FROM " . $table_prefix . $sql_table . " LIMIT 1");
-	$column = sed_sql_fetchfield($fieldsres, 0);
-	$column_prefix = substr($column->name, 0, strpos($column->name, "_"));
-
-	$step1 = sed_sql_query("UPDATE $db_dic SET 
-		dic_extra_location = '', 
-		dic_extra_type = '', 
-		dic_extra_size = '' 
-		WHERE dic_code = '" . $name . "'");
-
-	$step2 = sed_sql_query("ALTER TABLE " . $table_prefix . $sql_table . " DROP " . $column_prefix . "_" . $name);
-	return TRUE;
-}
-
-/** 
- * Build extra field 
- */
-function sed_build_extrafields($rowname, $tpl_tag, $extrafields, $data, $importrowname)
-{
-	global $sed_dic;
-
-	foreach ($extrafields as $i => $row) {
-		$t1 = $tpl_tag . '_' . strtoupper($row['code']);
-		$t3 = $tpl_tag . '_' . strtoupper($row['code'] . '_TITLE');
-		$t4 = $tpl_tag . '_' . strtoupper($row['code'] . '_DESC');
-		$t5 = $tpl_tag . '_' . strtoupper($row['code'] . '_MERA');
-
-		$data[$rowname . '_' . $row['code']] = isset($data[$rowname . '_' . $row['code']]) ? $data[$rowname . '_' . $row['code']] : '';
-		$data[$rowname . '_' . $row['code']] = ($data[$rowname . '_' . $row['code']] == '' && !empty($row['term_default'])) ? $row['term_default'] : $data[$rowname . '_' . $row['code']];
-
-		switch ($row['type']) {
-			case 'textinput':
-				$t2 = sed_textbox($importrowname . $row['code'], $data[$rowname . '_' . $row['code']], $row['form_size'], $row['form_maxsize']);
-				break;
-
-			case "textarea":
-				$t2 = sed_textarea($importrowname . $row['code'], $data[$rowname . '_' . $row['code']], $row['form_rows'], $row['form_cols']);
-				break;
-
-			case "select":
-				$t2 = sed_selectbox($data[$rowname . '_' . $row['code']], $importrowname . $row['code'], $row['terms']);
-				break;
-
-			case "checkbox":
-				$t2 = sed_checkbox($importrowname . $row['code'], $row['terms'], $data[$rowname . '_' . $row['code']]);
-				break;
-
-			case "radio":
-				$t2 = sed_radiobox($importrowname . $row['code'], $row['terms'], $data[$rowname . '_' . $row['code']]);
-				break;
-		}
-
-		$return_arr[$t1] = $t2;
-		$return_arr[$t3] = (!empty($row['form_title'])) ? $row['form_title'] : $row['title'];
-		$return_arr[$t4] = $row['form_desc'];
-		$return_arr[$t5] = $row['mera'];
-	}
-	return $return_arr;
-}
-
-/** 
- * Show extra field 
- */
-function sed_build_extrafields_data($rowname, $tpl_tag, $extrafields, $data, $getvalue = false)
-{
-	global $sed_dic;
-
-	foreach ($extrafields as $i => $row) {
-		$t1 = $tpl_tag . '_' . strtoupper($row['code']);
-		$t3 = $tpl_tag . '_' . strtoupper($row['code'] . '_TITLE');
-		$t4 = $tpl_tag . '_' . strtoupper($row['code'] . '_DESC');
-		$t5 = $tpl_tag . '_' . strtoupper($row['code'] . '_MERA');
-
-		switch ($row['type']) {
-			case 'textinput':
-				$t2 = $data[$rowname . '_' . $row['code']];
-				break;
-
-			case "textarea":
-				$t2 = $data[$rowname . '_' . $row['code']];
-				break;
-
-			case "select":
-				$t2 = (isset($row['terms'][$data[$rowname . '_' . $row['code']]])) ? $row['terms'][$data[$rowname . '_' . $row['code']]] : "";
-				break;
-
-			case "checkbox":
-				$data_arr = explode(',', $data[$rowname . '_' . $row['code']]);
-				$res_arr = array();
-				foreach ($data_arr as $k => $v) {
-					$res_arr[] = $row['terms'][$v];
-				}
-				$t2 = implode(', ', $res_arr);
-				break;
-
-			case "radio":
-				$t2 = isset($row['terms'][$data[$rowname . '_' . $row['code']]]) ? $row['terms'][$data[$rowname . '_' . $row['code']]] : "";
-				break;
-		}
-
-		$return_arr[$t1] = ($getvalue) ? $data[$rowname . '_' . $row['code']] : $t2;
-		$return_arr[$t3] = (!empty($row['form_title'])) ? $row['form_title'] : $row['title'];
-		$return_arr[$t4] = $row['form_desc'];
-		$return_arr[$t5] = $row['mera'];
-	}
-	return $return_arr;
-}
-
-
 
 /* ============== FLAGS AND COUNTRIES (ISO 3166) =============== */
 
